@@ -152,9 +152,9 @@ async def on_member_join(member):
     print(f'Member joined: {member}')
     update_sheet(member.id, '', verified=False)
 
-// @bot.event
-// async def on_member_remove(member):
-//     print(f'Member left: {member}')
-//     update_sheet(member.id, '', left_date=datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+# @bot.event
+# async def on_member_remove(member):
+#     print(f'Member left: {member}')
+#     update_sheet(member.id, '', left_date=datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
 
 bot.run(DISCORD_TOKEN)
