@@ -1,0 +1,29 @@
+name: Post Meme to Discord
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'
+
+jobs:
+  post-meme:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.8
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install discord.py requests
+
+    - name: Run post meme script
+      env:
+        DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
+      run: |
+        python your_script.py

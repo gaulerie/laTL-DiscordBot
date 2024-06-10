@@ -2,8 +2,6 @@ import os
 import discord
 from discord.ext import commands, tasks
 import requests
-from datetime import datetime, timedelta
-import asyncio
 
 TOKEN = os.getenv('DISCORD_TOKEN')
 CHANNEL_ID = 1249338900074201099  # Remplacez par l'ID du canal où vous voulez poster les mèmes
@@ -23,7 +21,8 @@ sent_files = set()
 async def on_ready():
     print(f'Logged in as {bot.user.name}')
     await fetch_sent_files()
-    post_meme.start()  # Démarre la tâche planifiée
+    await post_meme()  # Exécute la tâche immédiatement
+    await bot.close()
 
 async def fetch_sent_files():
     global sent_files
@@ -43,7 +42,6 @@ def get_github_files():
         print(f'Failed to fetch files from GitHub: {response.status_code}')
         return []
 
-@tasks.loop(hours=6)
 async def post_meme():
     channel = bot.get_channel(CHANNEL_ID)
     if channel is None:
@@ -65,7 +63,7 @@ async def post_meme():
 
             try:
                 await channel.send(content=f'**{filename}**', file=discord.File(file_path))
-                await channel.send(content='▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂')
+                await channel.send(content='▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂')
                 sent_files.add(filename)
                 os.remove(file_path)
                 print(f'Sent {filename}')
@@ -74,9 +72,5 @@ async def post_meme():
                 print(f'Failed to send {filename}: {e}')
         else:
             print(f'Failed to download {filename} from GitHub: {file_response.status_code}')
-
-@post_meme.before_loop
-async def before_post_meme():
-    await bot.wait_until_ready()
 
 bot.run(TOKEN)
