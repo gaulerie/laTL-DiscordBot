@@ -3,7 +3,7 @@ name: Post Meme to Discord
 on:
   schedule:
     - cron: '0 */6 * * *'
-  workflow_dispatch:
+  # workflow_dispatch:
 
 jobs:
   post-meme:
@@ -28,3 +28,4 @@ jobs:
         DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
       run: |
         python auto_meme_post.py
+        python auto_shitpost_post.py
