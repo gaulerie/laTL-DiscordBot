@@ -2,6 +2,7 @@ import os
 import discord
 from discord.ext import commands, tasks
 import requests
+import random
 
 TOKEN = os.getenv('DISCORD_TOKEN')
 CHANNEL_ID = 1249338900074201099  # Remplacez par l'ID du canal où vous voulez poster les mèmes
@@ -49,28 +50,30 @@ async def post_meme():
         return
 
     files = get_github_files()
-    for file_info in files:
-        filename = file_info['name']
-        if filename in sent_files:
-            continue
+    unsent_files = [file_info for file_info in files if file_info['name'] not in sent_files]
 
-        file_url = f"{GITHUB_RAW_URL}/{filename}"
-        file_response = requests.get(file_url)
-        if file_response.status_code == 200:
-            file_path = os.path.join('/tmp', filename)
-            with open(file_path, 'wb') as f:
-                f.write(file_response.content)
+    if not unsent_files:
+        print('No more files to send')
+        return
 
-            try:
-                await channel.send(content=f'**{filename}**', file=discord.File(file_path))
-                await channel.send(content='▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂')
-                sent_files.add(filename)
-                os.remove(file_path)
-                print(f'Sent {filename}')
-                break
-            except discord.errors.HTTPException as e:
-                print(f'Failed to send {filename}: {e}')
-        else:
-            print(f'Failed to download {filename} from GitHub: {file_response.status_code}')
+    file_info = random.choice(unsent_files)
+    filename = file_info['name']
+    file_url = f"{GITHUB_RAW_URL}/{filename}"
+    file_response = requests.get(file_url)
+    if file_response.status_code == 200:
+        file_path = os.path.join('/tmp', filename)
+        with open(file_path, 'wb') as f:
+            f.write(file_response.content)
+
+        try:
+            await channel.send(content=f'**{filename}**', file=discord.File(file_path))
+            await channel.send(content='▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂')
+            sent_files.add(filename)
+            os.remove(file_path)
+            print(f'Sent {filename}')
+        except discord.errors.HTTPException as e:
+            print(f'Failed to send {filename}: {e}')
+    else:
+        print(f'Failed to download {filename} from GitHub: {file_response.status_code}')
 
 bot.run(TOKEN)
