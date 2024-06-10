@@ -27,4 +27,4 @@ jobs:
       env:
         DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
       run: |
-        python auto_meme_post.py
+        python auto_shitpost_post.py
