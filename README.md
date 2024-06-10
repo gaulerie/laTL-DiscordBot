@@ -27,8 +27,8 @@ A Discord bot that interacts with users for verification and other commands.
 1. Clone the repository:
 
    ```bash
-   git clone https://github.com/yourusername/your-repo-name.git
-   cd your-repo-name
+   git clone https://github.com/gaulerie/latl-discord.git
+   cd latl-discord
    ```
 
 2. Create and activate a virtual environment:
@@ -44,7 +44,7 @@ A Discord bot that interacts with users for verification and other commands.
    pip install -r requirements.txt
    ```
 
-4. Create a `.env` file in the root directory and add your Discord token:
+4. Create a `.env` file in the root directory and add your Discord token (in GitHub, create a Secret):
 
    ```env
    DISCORD_TOKEN=your_discord_token_here
@@ -103,7 +103,7 @@ This bot can be deployed using GitHub Actions.
          env:
            DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
          run: |
-           python your_script.py
+           python auto_meme_post.py
    ```
 
 2. Add your `DISCORD_TOKEN` to the repository secrets:
