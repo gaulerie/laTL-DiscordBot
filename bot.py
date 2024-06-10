@@ -19,6 +19,7 @@ bot = commands.Bot(command_prefix='!', intents=intents)
 
 # Verrouillage
 lock_file = "/tmp/discord_bot.lock"
+commands_registered = False  # Flag pour vérifier si les commandes ont été enregistrées
 
 def check_and_create_lock():
     if os.path.exists(lock_file):
@@ -35,9 +36,12 @@ check_and_create_lock()
 
 @bot.event
 async def on_ready():
+    global commands_registered
     print(f'{bot.user.name} has connected to Discord!')
-    clean_verification_codes = register_commands(bot)  # Enregistrer les commandes et obtenir la tâche
-    clean_verification_codes.start()  # Démarrer la tâche
+    if not commands_registered:
+        clean_verification_codes = register_commands(bot)  # Enregistrer les commandes et obtenir la tâche
+        clean_verification_codes.start()  # Démarrer la tâche
+        commands_registered = True
 
 @bot.event
 async def on_disconnect():
