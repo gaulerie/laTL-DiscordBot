@@ -146,4 +146,4 @@ def register_commands(bot):
     #     print(f'Member left: {member}')
     #     update_sheet(member.id, '', left_date=datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
 
-    clean_verification_codes.start()
+    return clean_verification_codes  # Retourner la tâche pour qu'elle soit démarrée dans bot.py

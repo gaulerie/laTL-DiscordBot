@@ -36,13 +36,12 @@ check_and_create_lock()
 @bot.event
 async def on_ready():
     print(f'{bot.user.name} has connected to Discord!')
+    clean_verification_codes = register_commands(bot)  # Enregistrer les commandes et obtenir la tâche
+    clean_verification_codes.start()  # Démarrer la tâche
 
 @bot.event
 async def on_disconnect():
     remove_lock()
-
-# Enregistrer les commandes
-register_commands(bot)
 
 try:
     bot.run(DISCORD_TOKEN)
