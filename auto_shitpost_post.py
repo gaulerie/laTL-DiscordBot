@@ -7,7 +7,7 @@ import random
 TOKEN = os.getenv('DISCORD_TOKEN')
 CHANNEL_ID = 1249338900074201099  # Remplacez par l'ID du canal où vous voulez poster les mèmes
 GITHUB_REPO = 'gaulerie/laTL-DiscordBot'
-GITHUB_PATH = 'memes'
+GITHUB_PATH = 'shitpost'
 GITHUB_API_URL = f'https://api.github.com/repos/{GITHUB_REPO}/contents/{GITHUB_PATH}'
 GITHUB_RAW_URL = f'https://raw.githubusercontent.com/{GITHUB_REPO}/main/{GITHUB_PATH}'
 

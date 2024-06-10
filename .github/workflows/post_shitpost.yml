@@ -1,4 +1,4 @@
-name: Post Meme to Discord
+name: Post Shitpost to Discord
 
 on:
   schedule:
@@ -23,7 +23,7 @@ jobs:
         python -m pip install --upgrade pip
         pip install discord.py requests
 
-    - name: Run post meme script
+    - name: Run post shitpost script
       env:
         DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
       run: |
