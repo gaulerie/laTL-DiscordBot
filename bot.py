@@ -8,6 +8,8 @@ import html
 import re
 import os  # Ajout de l'importation du module os
 
+print("Starting bot...")  # Log initial
+
 # Remplacez ces valeurs par vos vrais tokens et clés API
 DISCORD_TOKEN = os.getenv('DISCORD_TOKEN')
 SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwi3Gh5TuK2IZV2R8imZa-B2m8gZpzByRfKHvMWxwHXffkNuIJ99OyISnYWfazhK7JHng/exec'
