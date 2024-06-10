@@ -6,6 +6,7 @@ import random
 import string
 import html
 import re
+import os  # Ajout de l'importation du module os
 
 # Remplacez ces valeurs par vos vrais tokens et clés API
 DISCORD_TOKEN = os.getenv('DISCORD_TOKEN')
