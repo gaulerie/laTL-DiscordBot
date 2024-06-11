@@ -29,3 +29,5 @@ jobs:
           DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
         run: |
           nohup python bot.py &
+          echo $! > /tmp/discord_bot.lock
+          tail -f /dev/null
