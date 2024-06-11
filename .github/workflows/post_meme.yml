@@ -3,7 +3,7 @@ name: Post Meme to Discord
 on:
   schedule:
     - cron: '0 */6 * * *'
-  # workflow_dispatch:
+  workflow_dispatch:
 
 jobs:
   post-meme:
