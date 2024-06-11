@@ -41,3 +41,4 @@ jobs:
         run: |
           python bot.py &
           echo $! > /tmp/discord_bot.lock
+          wait
