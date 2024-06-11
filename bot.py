@@ -6,6 +6,7 @@ import random
 import string
 import html
 import re
+import os
 
 intents = discord.Intents.default()
 intents.messages = True
@@ -155,6 +156,11 @@ async def clean_verification_codes():
         del verification_codes[user_id]
 
 @bot.event
+async def on_ready():
+    print(f'We have logged in as {bot.user}')
+    clean_verification_codes.start()
+
+@bot.event
 async def on_member_join(member):
     print(f'Member joined: {member}')
     update_sheet(member.id, '', verified=False)
@@ -164,8 +170,5 @@ async def on_member_join(member):
 #     print(f'Member left: {member}')
 #     update_sheet(member.id, '', left_date=datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
 
-# Démarrage de la boucle de nettoyage des codes de vérification
-clean_verification_codes.start()
-
 # Lancement du bot
-bot.run('YOUR_DISCORD_TOKEN')
+bot.run(os.getenv('DISCORD_TOKEN'))
