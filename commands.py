@@ -46,8 +46,9 @@ def register_commands(bot):
         if amount < 1:
             await ctx.send("Le nombre de messages à supprimer doit être supérieur à 0.")
             return
-        await ctx.channel.purge(limit=amount + 1)  # +1 pour inclure la commande elle-même
-        await ctx.send(f"{amount} messages ont été supprimés.", delete_after=5)
+        deleted = await ctx.channel.purge(limit=amount + 1)  # +1 pour inclure la commande elle-même
+        deleted_count = len(deleted) - 1  # -1 pour exclure la commande elle-même
+        await ctx.send(f"{deleted_count} messages ont été supprimés.", delete_after=5)
 
     @bot.command(name='verify')
     async def verify(ctx, twitter_handle: str = None):
