@@ -39,6 +39,4 @@ jobs:
         env:
           DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
         run: |
-          python bot.py &
-          echo $! > /tmp/discord_bot.lock
-          wait
+          nohup python bot.py & echo $! > /tmp/discord_bot.lock
