@@ -25,7 +25,6 @@ jobs:
           pip install -r requirements.txt
 
       - name: Stop previous bot instance
-        if: ${{ runner.os == 'Linux' }}
         run: |
           if [ -f /tmp/discord_bot.lock ]; then
             pid=$(cat /tmp/discord_bot.lock)
