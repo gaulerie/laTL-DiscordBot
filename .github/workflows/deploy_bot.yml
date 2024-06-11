@@ -24,19 +24,8 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Stop previous bot instance
-        run: |
-          if [ -f /tmp/discord_bot.lock ]; then
-            pid=$(cat /tmp/discord_bot.lock)
-            if [ -d /proc/$pid ]; then
-              echo "Stopping previous bot instance with PID $pid"
-              kill -9 $pid
-            fi
-            rm -f /tmp/discord_bot.lock
-          fi
-
       - name: Run bot
         env:
           DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
         run: |
-          nohup python bot.py & echo $! > /tmp/discord_bot.lock
+          nohup python bot.py &
