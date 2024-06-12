@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - main
+  schedule:
+    - cron: "0 */6 * * *"
   workflow_dispatch:
 
 jobs:
@@ -28,6 +30,11 @@ jobs:
         env:
           DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
         run: |
-          nohup python bot.py &
-          echo $! > /tmp/discord_bot.lock
+          if [ -f /tmp/discord_bot.lock ]; then
+            echo "Bot is already running"
+            exit 0
+          else
+            nohup python bot.py &
+            echo $! > /tmp/discord_bot.lock
+          fi
           tail -f /dev/null

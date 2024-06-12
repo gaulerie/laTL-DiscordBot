@@ -1,0 +1,38 @@
+name: Post Memes and Shitposts to Discord
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+
+jobs:
+  post-content:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install discord.py requests
+
+      - name: Run post meme script
+        if: github.event_name == 'schedule' || github.event.inputs.script == 'auto_meme_post'
+        env:
+          DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
+        run: |
+          python auto_meme_post.py
+
+      - name: Run post shitpost script
+        if: github.event_name == 'schedule' || github.event.inputs.script == 'auto_shitpost_post'
+        env:
+          DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
+        run: |
+          python auto_shitpost_post.py
