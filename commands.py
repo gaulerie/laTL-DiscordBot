@@ -46,7 +46,11 @@ def register_commands(bot):
         if amount < 1:
             await ctx.send("Le nombre de messages à supprimer doit être supérieur à 0.")
             return
-        deleted = await ctx.channel.purge(limit=amount + 1)  # +1 pour inclure la commande elle-même
+        
+        def not_pinned(message):
+            return not message.pinned
+
+        deleted = await ctx.channel.purge(limit=amount + 1, check=not_pinned)  # +1 pour inclure la commande elle-même
         deleted_count = len(deleted)  # Nombre total de messages supprimés, y compris la commande elle-même
         await ctx.send(f"{deleted_count - 1} messages ont été supprimés.", delete_after=5)  # -1 pour exclure la commande elle-même
 
@@ -146,15 +150,3 @@ def register_commands(bot):
         expired_codes = [user_id for user_id, (_, _, expiration_time) in verification_codes.items() if current_time > expiration_time]
         for user_id in expired_codes:
             del verification_codes[user_id]
-
-    @bot.event
-    async def on_member_join(member):
-        print(f'Member joined: {member}')
-        update_sheet(member.id, '', verified=False)
-
-    # @bot.event
-    # async def on_member_remove(member):
-    #     print(f'Member left: {member}')
-    #     update_sheet(member.id, '', left_date=datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
-
-    return clean_verification_codes  # Retourner la tâche pour qu'elle soit démarrée dans bot.py
