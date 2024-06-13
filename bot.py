@@ -64,6 +64,11 @@ async def verify(ctx, twitter_handle: str = None):
         await ctx.send("Veuillez écrire !verify [@ Twitter]")
         return
 
+    # Vérifier si l'utilisateur a entré une URL au lieu d'un pseudo Twitter
+    if re.match(r'^https?://(www\.)?(twitter|x)\.com/[A-Za-z0-9_]+/status/[0-9]+$', twitter_handle):
+        await ctx.send("Pour vérifier un lien, utilisez !check [lien]")
+        return
+
     # Enlever les crochets autour du pseudo si présents
     if twitter_handle.startswith('[') and twitter_handle.endswith(']'):
         twitter_handle = twitter_handle[1:-1]
@@ -80,6 +85,11 @@ async def check(ctx, tweet_url: str = None):
         await ctx.send("Veuillez écrire !check [lien du tweet]")
         return
 
+    # Vérifier si l'utilisateur a entré un pseudo Twitter au lieu d'un lien
+    if not re.match(r'^https?://(www\.)?(twitter|x)\.com/[A-Za-z0-9_]+/status/[0-9]+$', tweet_url):
+        await ctx.send("Pour vérifier votre compte, utilisez !verify [pseudo]")
+        return
+
     if ctx.author.id not in verification_codes:
         await ctx.send("Vous n'avez pas encore demandé de vérification. Utilisez !verify <votre_handle_twitter>")
         return
@@ -92,52 +102,42 @@ async def check(ctx, tweet_url: str = None):
         return
 
     try:
-        # Validation de l'URL du tweet
-        if not re.match(r'^https?://(www\.)?(twitter|x)\.com/[A-Za-z0-9_]+/status/[0-9]+$', tweet_url):
-            await ctx.send("L'URL du tweet n'est pas valide. Veuillez fournir une URL correcte.")
-            return
-
         response = requests.get(f"https://publish.twitter.com/oembed?url={tweet_url}")
-        
-        if response.status_code != 200:
-            await ctx.send(f"Erreur lors de l'accès au tweet: {response.status_code}")
-            return
-
         tweet_data = response.json()
-        tweet_html = tweet_data.get('html', '')
-
-        # Vérifier si le tweet HTML est vide
-        if not tweet_html:
-            await ctx.send("Le tweet n'a pas pu être récupéré. Veuillez vérifier l'URL du tweet.")
-            return
-
-        # Décoder les entités HTML
-        tweet_html = html.unescape(tweet_html)
         
-        # Extraction du handle Twitter depuis le HTML
-        match = re.search(r'\(@([^)]+)\)', tweet_html)
-        if match:
-            extracted_handle = match.group(1).lower()
-            print(f"Handle extrait: {extracted_handle}")
-            print(f"Handle attendu: {twitter_handle}")
-            print(f"Code attendu: {code}")
+        if response.status_code == 200:
+            tweet_html = tweet_data['html']
+            print(f"HTML du tweet: {tweet_html}")  # Impression pour débogage
+
+            # Décoder les entités HTML
+            tweet_html = html.unescape(tweet_html)
             
-            # Vérifiez si le handle Twitter et le code de vérification sont présents dans le HTML du tweet
-            if extracted_handle == twitter_handle and code.lower() in tweet_html.lower():
-                print("Handle et code vérifiés avec succès.")
-                role_verified = discord.utils.get(ctx.guild.roles, name='Membre')
-                role_non_verified = discord.utils.get(ctx.guild.roles, name='Non Vérifié')
-                if role_verified and role_non_verified:
-                    await ctx.author.add_roles(role_verified)
-                    await ctx.author.remove_roles(role_non_verified)
-                    update_sheet(ctx.author.id, twitter_handle, verified=True)
-                    await purge_user_messages(ctx.channel, ctx.author.id)
-                    await ctx.send(f"Utilisateur {ctx.author.mention} vérifié et rôle 'Membre' attribué.")
-                    del verification_codes[ctx.author.id]
-                    return
-            else:
-                print("Le handle ou le code ne correspondent pas.")
-        await ctx.send("Le tweet ne contient pas le code de vérification ou n'a pas été tweeté par le bon utilisateur. Veuillez réessayer.")
+            # Extraction du handle Twitter depuis le HTML
+            match = re.search(r'\(@([^)]+)\)', tweet_html)
+            if match:
+                extracted_handle = match.group(1).lower()
+                print(f"Handle extrait: {extracted_handle}")
+                print(f"Handle attendu: {twitter_handle}")
+                print(f"Code attendu: {code}")
+                
+                # Vérifiez si le handle Twitter et le code de vérification sont présents dans le HTML du tweet
+                if extracted_handle == twitter_handle and code.lower() in tweet_html.lower():
+                    print("Handle et code vérifiés avec succès.")
+                    role_verified = discord.utils.get(ctx.guild.roles, name='Membre')
+                    role_non_verified = discord.utils.get(ctx.guild.roles, name='Non Vérifié')
+                    if role_verified and role_non_verified:
+                        await ctx.author.add_roles(role_verified)
+                        await ctx.author.remove_roles(role_non_verified)
+                        update_sheet(ctx.author.id, twitter_handle, verified=True)
+                        await purge_user_messages(ctx.channel, ctx.author.id)
+                        await ctx.send(f"Utilisateur {ctx.author.mention} vérifié et rôle 'Membre' attribué.")
+                        del verification_codes[ctx.author.id]
+                        return
+                else:
+                    print("Le handle ou le code ne correspondent pas.")
+            await ctx.send("Le tweet ne contient pas le code de vérification ou n'a pas été tweeté par le bon utilisateur. Veuillez réessayer.")
+        else:
+            await ctx.send(f"Erreur lors de l'accès au tweet: {response.status_code}")
     except Exception as e:
         await ctx.send(f"Erreur lors de l'accès au tweet: {str(e)}")
 
