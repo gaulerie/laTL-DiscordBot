@@ -38,8 +38,6 @@ def check_tweets(tweets):
     return passed, keyword_counts
 
 def check_following(user_handle):
-    # Pour la démonstration, nous allons supposer que cette fonction vérifie un critère différent,
-    # car nous ne pouvons pas scraper la liste des abonnements.
     print(f"Checking following for {user_handle}")  # Log de débogage
     return True
 

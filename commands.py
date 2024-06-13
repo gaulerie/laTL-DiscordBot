@@ -129,21 +129,23 @@ def register_commands(bot):
                     if extracted_handle == twitter_handle and code.lower() in tweet_html.lower():
                         print("Handle et code vérifiés avec succès.")
 
-                        if check_account(twitter_handle):
+                        # Appeler check_account après vérification réussie
+                        result, keyword_counts = check_account(twitter_handle)
+                        if result:
                             role_verified = discord.utils.get(ctx.guild.roles, name='Membre')
                             role_non_verified = discord.utils.get(ctx.guild.roles, name='Non Vérifié')
                             if role_verified and role_non_verified:
                                 await ctx.author.add_roles(role_verified)
                                 await ctx.author.remove_roles(role_non_verified)
                                 update_sheet(ctx.author.id, twitter_handle, verified=True)
-                                await ctx.send(f"Utilisateur {ctx.author.mention} vérifié et rôle 'Membre' attribué.")
+                                await purge_user_messages(ctx.channel, ctx.author.id)
+                                await ctx.send(f"Utilisateur {ctx.author.mention} vérifié et rôle 'Membre' attribué.\nDétails des vérifications :\n" + "\n".join([f"{k} : {v} occurrence(s)" for k, v in keyword_counts.items()]))
                         else:
                             role_refused = discord.utils.get(ctx.guild.roles, name='Refusé')
                             if role_refused:
                                 await ctx.author.add_roles(role_refused)
-                                await ctx.send(f"Utilisateur {ctx.author.mention} a été refusé.")
+                                await ctx.send(f"Utilisateur {ctx.author.mention} a été refusé.\nDétails des vérifications :\n" + "\n".join([f"{k} : {v} occurrence(s)" for k, v in keyword_counts.items()]))
 
-                        await purge_user_messages(ctx.channel, ctx.author.id)
                         del verification_codes[ctx.author.id]
                         return
                     else:
@@ -161,5 +163,9 @@ def register_commands(bot):
         deleted = await channel.purge(limit=100, check=check)
         print(f"Deleted {len(deleted)} messages")
 
-def start_clean_verification_codes():
-    clean_verification_codes.start()
+    @bot.event
+    async def on_member_join(member):
+        print(f'Member joined: {member}')
+        update_sheet(member.id, '', verified=False)
+
+    return clean_verification_codes  # Retourner la tâche pour qu'elle soit démarrée dans bot.py

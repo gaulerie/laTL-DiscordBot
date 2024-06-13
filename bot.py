@@ -1,7 +1,7 @@
 import discord
-from discord.ext import commands
+from discord.ext import commands, tasks
 import os
-from commands import register_commands, update_sheet, start_clean_verification_codes
+from commands import register_commands, update_sheet
 
 intents = discord.Intents.default()
 intents.messages = True
@@ -9,7 +9,7 @@ intents.message_content = True
 intents.guilds = True
 intents.members = True
 
-bot = commands.Bot(command_prefix="!", intents=intents, help_command=None)
+bot = commands.Bot(command_prefix="!", intents=intents)
 
 # Enregistrer les commandes
 register_commands(bot)
@@ -24,10 +24,5 @@ async def on_member_join(member):
     print(f'Member joined: {member}')
     update_sheet(member.id, '', verified=False)
 
-# @bot.event
-# async def on_member_remove(member):
-#     print(f'Member left: {member}')
-#     update_sheet(member.id, '', left_date=datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
-
-# Lancement du bot
+# Démarrer le bot
 bot.run(os.getenv('DISCORD_TOKEN'))
