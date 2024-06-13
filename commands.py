@@ -29,6 +29,13 @@ def update_sheet(discord_id, twitter_handle, verified=False, left_date=''):
     else:
         print("Data successfully sent to Google Sheets")
 
+@tasks.loop(minutes=1)
+async def clean_verification_codes():
+    current_time = datetime.now()
+    expired_codes = [user_id for user_id, (_, _, expiration_time) in verification_codes.items() if current_time > expiration_time]
+    for user_id in expired_codes:
+        del verification_codes[user_id]
+
 def register_commands(bot):
     @bot.command(name='bothelp')
     async def bothelp(ctx):
@@ -144,9 +151,5 @@ def register_commands(bot):
         deleted = await channel.purge(limit=100, check=check)
         print(f"Deleted {len(deleted)} messages")
 
-    @tasks.loop(minutes=1)
-    async def clean_verification_codes():
-        current_time = datetime.now()
-        expired_codes = [user_id for user_id, (_, _, expiration_time) in verification_codes.items() if current_time > expiration_time]
-        for user_id in expired_codes:
-            del verification_codes[user_id]
+# Démarrer la tâche de nettoyage des codes de vérification expirés
+clean_verification_codes.start()
