@@ -1,9 +1,6 @@
 name: Deploy Discord Bot
 
 on:
-  #push:
-  #  branches:
-  #    - main
   workflow_dispatch: # Permet de déclencher manuellement le workflow
 
 jobs:
@@ -25,6 +22,10 @@ jobs:
       - name: Run bot
         env:
           DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
+          API_KEY: ${{ secrets.API_KEY }}
+          API_SECRET_KEY: ${{ secrets.API_SECRET_KEY }}
+          ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+          ACCESS_TOKEN_SECRET: ${{ secrets.ACCESS_TOKEN_SECRET }}
         run: |
           python bot.py
 
