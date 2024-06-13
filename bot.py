@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands, tasks
 import os
-from commands import register_commands, update_sheet
+from commands import register_commands, update_sheet, clean_verification_codes
 
 intents = discord.Intents.default()
 intents.messages = True
