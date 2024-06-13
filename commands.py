@@ -56,6 +56,11 @@ def register_commands(bot):
             await ctx.send("Veuillez écrire !verify [@ Twitter]")
             return
 
+        # Vérifier si l'utilisateur a entré une URL au lieu d'un pseudo Twitter
+        if re.match(r'^https?://(www\.)?(twitter|x)\.com/[A-Za-z0-9_]+/status/[0-9]+$', twitter_handle):
+            await ctx.send("Pour vérifier un lien, utilisez !check [lien]")
+            return
+
         # Enlever les crochets autour du pseudo si présents
         if twitter_handle.startswith('[') and twitter_handle.endswith(']'):
             twitter_handle = twitter_handle[1:-1]
@@ -70,6 +75,11 @@ def register_commands(bot):
     async def check(ctx, tweet_url: str = None):
         if not tweet_url:
             await ctx.send("Veuillez écrire !check [lien du tweet]")
+            return
+
+        # Vérifier si l'utilisateur a entré un pseudo Twitter au lieu d'un lien
+        if not re.match(r'^https?://(www\.)?(twitter|x)\.com/[A-Za-z0-9_]+/status/[0-9]+$', tweet_url):
+            await ctx.send("Pour vérifier votre compte, utilisez !verify [pseudo]")
             return
 
         if ctx.author.id not in verification_codes:
