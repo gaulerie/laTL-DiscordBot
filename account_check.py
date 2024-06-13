@@ -32,23 +32,32 @@ def check_tweets(tweets):
                 keyword_counts[keyword] += 1
 
     for keyword, count in keyword_counts.items():
-        print(f"Occurrences of '{keyword}': {count}")
+        print(f"Occurrences of '{keyword}': {count}")  # Log de débogage
 
     passed = all(count == 0 for count in keyword_counts.values())
     return passed, keyword_counts
 
 def check_following(user_handle):
     print(f"Checking following for {user_handle}")  # Log de débogage
+    # Here you would implement the actual following check logic
+    # For now, we assume the following check always passes
     return True
 
 def check_account(user_handle):
     print(f"Checking account for {user_handle}")  # Log de débogage
-    if "🇫🇷" in user_handle or "🇦🇶" in user_handle:
-        print(f"Account {user_handle} has special flag, automatically passing")  # Log de débogage
+    special_flags = "🇫🇷" in user_handle or "🇦🇶" in user_handle
+    if special_flags:
+        flags = []
+        if "🇫🇷" in user_handle:
+            flags.append("🇫🇷")
+        if "🇦🇶" in user_handle:
+            flags.append("🇦🇶")
+        print(f"Account {user_handle} has special flag(s): {', '.join(flags)}, automatically passing")  # Log de débogage
         return True, {}
 
-    if check_following(user_handle):
-        print(f"Account {user_handle} passes the following check")  # Log de débogage
+    following_check = check_following(user_handle)
+    print(f"Following check for {user_handle}: {'passed' if following_check else 'failed'}")  # Log de débogage
+    if following_check:
         return True, {}
 
     tweets = fetch_tweets(user_handle)
@@ -58,3 +67,18 @@ def check_account(user_handle):
     else:
         print(f"Account {user_handle} fails the tweet content check")  # Log de débogage
     return result, keyword_counts
+
+# Commande pour tester @gaulerie directement
+def test_account():
+    user_handle = 'gaulerie'
+    print(f"Testing account for {user_handle}")
+    result, keyword_counts = check_account(user_handle)
+    if result:
+        print(f"Account {user_handle} passed verification")
+    else:
+        print(f"Account {user_handle} failed verification")
+    print("Detailed keyword occurrences:")
+    for keyword, count in keyword_counts.items():
+        print(f"{keyword}: {count}")
+
+test_account()  # Pour tester le compte 'gaulerie' lors de l'exécution du script

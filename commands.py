@@ -139,13 +139,18 @@ def register_commands(bot):
                                 await ctx.author.remove_roles(role_non_verified)
                                 update_sheet(ctx.author.id, twitter_handle, verified=True)
                                 await purge_user_messages(ctx.channel, ctx.author.id)
-                                await ctx.send(f"Utilisateur {ctx.author.mention} vérifié et rôle 'Membre' attribué.\nDétails des vérifications :\n" + "\n".join([f"{k} : {v} occurrence(s)" for k, v in keyword_counts.items()]))
+                                await ctx.send(f"Utilisateur {ctx.author.mention} vérifié et rôle 'Membre' attribué.")
                         else:
                             role_refused = discord.utils.get(ctx.guild.roles, name='Refusé')
                             if role_refused:
                                 await ctx.author.add_roles(role_refused)
-                                await ctx.send(f"Utilisateur {ctx.author.mention} a été refusé.\nDétails des vérifications :\n" + "\n".join([f"{k} : {v} occurrence(s)" for k, v in keyword_counts.items()]))
+                                await ctx.send(f"Utilisateur {ctx.author.mention} a été refusé.")
 
+                        # Enregistrer les détails dans les logs
+                        print(f"Détails de la vérification pour {twitter_handle}:")
+                        for keyword, count in keyword_counts.items():
+                            print(f" - {keyword}: {count} occurrence(s)")
+                        
                         del verification_codes[ctx.author.id]
                         return
                     else:
@@ -155,6 +160,19 @@ def register_commands(bot):
                 await ctx.send(f"Erreur lors de l'accès au tweet: {response.status_code}")
         except Exception as e:
             await ctx.send(f"Erreur lors de l'accès au tweet: {str(e)}")
+
+    @bot.command(name='testaccount')
+    async def test_account_command(ctx):
+        user_handle = 'gaulerie'
+        await ctx.send(f"Testing account for {user_handle}")
+        result, keyword_counts = check_account(user_handle)
+        if result:
+            await ctx.send(f"Account {user_handle} passed verification")
+        else:
+            await ctx.send(f"Account {user_handle} failed verification")
+        print("Detailed keyword occurrences:")
+        for keyword, count in keyword_counts.items():
+            print(f"{keyword}: {count}")
 
     async def purge_user_messages(channel, user_id):
         def check(m):
