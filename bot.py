@@ -5,11 +5,10 @@ from commands import register_commands, update_sheet
 
 intents = discord.Intents.default()
 intents.messages = True
-intents.message_content = True
 intents.guilds = True
 intents.members = True
 
-bot = commands.Bot(command_prefix="!", intents=intents)
+bot = commands.Bot(command_prefix="!", intents=intents, help_command=None)  # Désactiver la commande help par défaut
 
 # Enregistrer les commandes
 register_commands(bot)
@@ -17,7 +16,7 @@ register_commands(bot)
 @bot.event
 async def on_ready():
     print(f'We have logged in as {bot.user}')
-    start_clean_verification_codes()
+    clean_verification_codes.start()
 
 @bot.event
 async def on_member_join(member):
