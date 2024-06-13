@@ -16,8 +16,14 @@ def fetch_tweets(user_handle):
     tweets = []
 
     for tweet in soup.find_all('div', {'data-testid': 'tweet'}):
-        tweet_text = tweet.find('div', {'lang': True}).get_text()
-        tweets.append(tweet_text)
+        print(f"Tweet HTML: {tweet}")  # Log de la structure HTML du tweet
+        tweet_text = tweet.find('div', {'lang': True})
+        if tweet_text:
+            tweets.append(tweet_text.get_text())
+            print(f"Tweet fetched: {tweet_text.get_text()}")  # Log de chaque tweet trouvé
+        else:
+            print("No text found for a tweet, skipping it.")  # Log si aucun texte n'est trouvé
+
     print(f"Fetched {len(tweets)} tweets for {user_handle}")  # Log de débogage
 
     return tweets
@@ -30,6 +36,7 @@ def check_tweets(tweets):
         for keyword in reject_keywords:
             if keyword in text:
                 keyword_counts[keyword] += 1
+                print(f"Keyword '{keyword}' found in tweet: {tweet}")  # Log de chaque occurrence de mot-clé
 
     for keyword, count in keyword_counts.items():
         print(f"Occurrences of '{keyword}': {count}")  # Log de débogage
@@ -61,11 +68,20 @@ def check_account(user_handle):
         return True, {}
 
     tweets = fetch_tweets(user_handle)
+    if not tweets:
+        print("No tweets found, failing verification.")  # Log de débogage
+        return False, {"tweets": 0}
+
     result, keyword_counts = check_tweets(tweets)
     if result:
         print(f"Account {user_handle} passes the tweet content check")  # Log de débogage
     else:
         print(f"Account {user_handle} fails the tweet content check")  # Log de débogage
+
+    print("Detailed keyword occurrences:")  # Log de débogage
+    for keyword, count in keyword_counts.items():
+        print(f"{keyword}: {count}")
+
     return result, keyword_counts
 
 # Commande pour tester @gaulerie directement
