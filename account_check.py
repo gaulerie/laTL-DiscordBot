@@ -8,6 +8,12 @@ API_SECRET_KEY = os.getenv('API_SECRET_KEY')
 ACCESS_TOKEN = os.getenv('ACCESS_TOKEN')
 ACCESS_TOKEN_SECRET = os.getenv('ACCESS_TOKEN_SECRET')
 
+# Ajouter des impressions pour débogage
+print(f"API_KEY: {API_KEY}")
+print(f"API_SECRET_KEY: {API_SECRET_KEY}")
+print(f"ACCESS_TOKEN: {ACCESS_TOKEN}")
+print(f"ACCESS_TOKEN_SECRET: {ACCESS_TOKEN_SECRET}")
+
 # Assurez-vous que toutes les variables d'environnement sont correctement définies
 if not all([API_KEY, API_SECRET_KEY, ACCESS_TOKEN, ACCESS_TOKEN_SECRET]):
     raise Exception("One or more API keys are not set in the environment variables.")
@@ -85,16 +91,6 @@ def check_account(user_handle):
 
     user_id = user_data["data"]["id"]
 
-    print(f"URL: {create_url(user_id)}, Params: {get_params()}")
-    if 'data' not in user_data or 'id' not in user_data['data']:
-        print(f"Invalid response: {response.text}")
-        raise Exception(f"Error fetching user ID: Invalid response {response.text}")
-
     tweets_response = fetch_tweets(user_id)
     tweets = tweets_response.get("data", [])
     return check_tweets(tweets)
-
-print(f"API_KEY: {API_KEY}")
-print(f"API_SECRET_KEY: {API_SECRET_KEY}")
-print(f"ACCESS_TOKEN: {ACCESS_TOKEN}")
-print(f"ACCESS_TOKEN_SECRET: {ACCESS_TOKEN_SECRET}")
