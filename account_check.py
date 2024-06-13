@@ -2,6 +2,7 @@ import requests
 import os
 
 BEARER_TOKEN = os.getenv('BEARER_TOKEN')
+print(f"Bearer Token: {BEARER_TOKEN}")  # Message de débogage pour vérifier le token (attention à la sécurité)
 
 def create_url(user_id):
     return f"https://api.twitter.com/2/users/{user_id}/tweets"
@@ -16,6 +17,7 @@ def bearer_oauth(r):
 
 def connect_to_endpoint(url, params):
     response = requests.get(url, auth=bearer_oauth, params=params)
+    print(f"URL: {url}, Status Code: {response.status_code}, Response: {response.text}")  # Message de débogage
     if response.status_code != 200:
         raise Exception(f"Request returned an error: {response.status_code} {response.text}")
     return response.json()
@@ -36,12 +38,14 @@ def check_tweets(tweets):
 def check_following(user_handle):
     url = f"https://api.twitter.com/2/users/by/username/{user_handle}"
     response = requests.get(url, auth=bearer_oauth)
+    print(f"Fetching user ID, Status Code: {response.status_code}, Response: {response.text}")  # Message de débogage
     if response.status_code != 200:
         raise Exception(f"Error fetching user ID: {response.status_code} {response.text}")
     user_id = response.json()["data"]["id"]
 
     url = f"https://api.twitter.com/2/users/{user_id}/following"
     response = requests.get(url, auth=bearer_oauth)
+    print(f"Fetching following list, Status Code: {response.status_code}, Response: {response.text}")  # Message de débogage
     if response.status_code != 200:
         raise Exception(f"Error fetching following list: {response.status_code} {response.text}")
     following = response.json()["data"]
@@ -58,6 +62,7 @@ def check_account(user_handle):
 
     url = f"https://api.twitter.com/2/users/by/username/{user_handle}"
     response = requests.get(url, auth=bearer_oauth)
+    print(f"Fetching user ID for tweets, Status Code: {response.status_code}, Response: {response.text}")  # Message de débogage
     if response.status_code != 200:
         raise Exception(f"Error fetching user ID: {response.status_code} {response.text}")
     user_id = response.json()["data"]["id"]
