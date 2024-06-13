@@ -103,7 +103,7 @@ def register_commands(bot):
                     print(f"Code attendu: {code}")
                     
                     # Vérifiez si le handle Twitter et le code de vérification sont présents dans le HTML du tweet
-                    if extracted_handle == twitter_handle and code in tweet_html:
+                    if extracted_handle == twitter_handle and code.lower() in tweet_html.lower():
                         print("Handle et code vérifiés avec succès.")
                         role_verified = discord.utils.get(ctx.guild.roles, name='Membre')
                         role_non_verified = discord.utils.get(ctx.guild.roles, name='Non Vérifié')
