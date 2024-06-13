@@ -146,8 +146,8 @@ def register_commands(bot):
 
     async def purge_user_messages(channel, user_id):
         def check(m):
-            return m.author.id == user_id or (m.author == bot.user and not any(role.name == 'Admin' for role in m.author.roles))
-        
+            return m.author.id == user_id and not m.pinned
+
         deleted = await channel.purge(limit=100, check=check)
         print(f"Deleted {len(deleted)} messages")
 
