@@ -37,8 +37,8 @@ async def clean_verification_codes():
         del verification_codes[user_id]
 
 def register_commands(bot):
-    @bot.command(name='bothelp')
-    async def bothelp(ctx):
+    @bot.command(name='help')
+    async def help_command(ctx):
         help_text = """
         **Commandes disponibles :**
         `!verify [@ Twitter]` - Démarre le processus de vérification.
