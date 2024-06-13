@@ -6,6 +6,8 @@ import random
 import string
 import html
 import re
+import os
+from account_check import check_account
 
 verification_codes = {}
 
@@ -126,16 +128,24 @@ def register_commands(bot):
                     # Vérifiez si le handle Twitter et le code de vérification sont présents dans le HTML du tweet
                     if extracted_handle == twitter_handle and code.lower() in tweet_html.lower():
                         print("Handle et code vérifiés avec succès.")
-                        role_verified = discord.utils.get(ctx.guild.roles, name='Membre')
-                        role_non_verified = discord.utils.get(ctx.guild.roles, name='Non Vérifié')
-                        if role_verified and role_non_verified:
-                            await ctx.author.add_roles(role_verified)
-                            await ctx.author.remove_roles(role_non_verified)
-                            update_sheet(ctx.author.id, twitter_handle, verified=True)
-                            await purge_user_messages(ctx.channel, ctx.author.id)
-                            await ctx.send(f"Utilisateur {ctx.author.mention} vérifié et rôle 'Membre' attribué.")
-                            del verification_codes[ctx.author.id]
-                            return
+
+                        if check_account(twitter_handle):
+                            role_verified = discord.utils.get(ctx.guild.roles, name='Membre')
+                            role_non_verified = discord.utils.get(ctx.guild.roles, name='Non Vérifié')
+                            if role_verified and role_non_verified:
+                                await ctx.author.add_roles(role_verified)
+                                await ctx.author.remove_roles(role_non_verified)
+                                update_sheet(ctx.author.id, twitter_handle, verified=True)
+                                await ctx.send(f"Utilisateur {ctx.author.mention} vérifié et rôle 'Membre' attribué.")
+                        else:
+                            role_refused = discord.utils.get(ctx.guild.roles, name='Refusé')
+                            if role_refused:
+                                await ctx.author.add_roles(role_refused)
+                                await ctx.send(f"Utilisateur {ctx.author.mention} a été refusé.")
+
+                        await purge_user_messages(ctx.channel, ctx.author.id)
+                        del verification_codes[ctx.author.id]
+                        return
                     else:
                         print("Le handle ou le code ne correspondent pas.")
                 await ctx.send("Le tweet ne contient pas le code de vérification ou n'a pas été tweeté par le bon utilisateur. Veuillez réessayer.")
