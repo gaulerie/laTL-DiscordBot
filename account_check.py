@@ -1,7 +1,7 @@
 import requests
 import os
 
-BEARER_TOKEN = os.getenv('TWITTER_BEARER_TOKEN')
+BEARER_TOKEN = os.getenv('BEARER_TOKEN')
 
 def create_url(user_id):
     return f"https://api.twitter.com/2/users/{user_id}/tweets"
