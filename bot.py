@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 import os
-from commands import register_commands, update_sheet
+from commands import register_commands, update_sheet, start_clean_verification_codes
 
 intents = discord.Intents.default()
 intents.messages = True
@@ -17,6 +17,7 @@ register_commands(bot)
 @bot.event
 async def on_ready():
     print(f'We have logged in as {bot.user}')
+    start_clean_verification_codes()
 
 @bot.event
 async def on_member_join(member):

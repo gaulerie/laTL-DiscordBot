@@ -151,5 +151,5 @@ def register_commands(bot):
         deleted = await channel.purge(limit=100, check=check)
         print(f"Deleted {len(deleted)} messages")
 
-# Démarrer la tâche de nettoyage des codes de vérification expirés
-clean_verification_codes.start()
+def start_clean_verification_codes():
+    clean_verification_codes.start()
