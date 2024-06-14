@@ -112,7 +112,7 @@ def register_commands(bot):
             
             if response.status_code == 200:
                 tweet_html = tweet_data['html']
-                print(f"HTML du tweet: {tweet_html}")  # Impression pour débogage
+                print(f"HTML du tweet: {tweet_html}")
 
                 # Décoder les entités HTML
                 tweet_html = html.unescape(tweet_html)
@@ -126,7 +126,7 @@ def register_commands(bot):
                     print(f"Code attendu: {code}")
                     
                     # Vérifiez si le handle Twitter et le code de vérification sont présents dans le HTML du tweet
-                    if extracted_handle == twitter_handle and code.lower() in tweet_html.lower():
+                    if extracted_handle == twitter_handle and f"#VerificationCode: {code}".lower() in tweet_html.lower():
                         print("Handle et code vérifiés avec succès.")
 
                         # Appeler check_account après vérification réussie
