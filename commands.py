@@ -7,7 +7,7 @@ import string
 import html
 import re
 import os
-from account_check import check_account
+from bs4 import BeautifulSoup
 
 verification_codes = {}
 
@@ -69,15 +69,6 @@ def register_commands(bot):
             await ctx.send("Veuillez écrire !verify [@ Twitter]")
             return
 
-        # Vérifier si l'utilisateur a entré une URL au lieu d'un pseudo Twitter
-        if re.match(r'^https?://(www\.)?(twitter|x)\.com/[A-Za-z0-9_]+/status/[0-9]+$', twitter_handle):
-            await ctx.send("Pour vérifier un lien, utilisez !check [lien]")
-            return
-
-        # Enlever les crochets autour du pseudo si présents
-        if twitter_handle.startswith('[') and twitter_handle.endswith(']'):
-            twitter_handle = twitter_handle[1:-1]
-
         twitter_handle = twitter_handle.strip('@').lower()
         code = generate_verification_code()
         expiration_time = datetime.now() + timedelta(minutes=5)
@@ -90,72 +81,56 @@ def register_commands(bot):
             await ctx.send("Veuillez écrire !check [lien du tweet]")
             return
 
-        # Vérifier si l'utilisateur a entré un pseudo Twitter au lieu d'un lien
-        if not re.match(r'^https?://(www\.)?(twitter|x)\.com/[A-Za-z0-9_]+/status/[0-9]+$', tweet_url):
-            await ctx.send("Pour vérifier votre compte, utilisez !verify [pseudo]")
-            return
-
-        if ctx.author.id not in verification_codes:
-            await ctx.send("Vous n'avez pas encore demandé de vérification. Utilisez !verify <votre_handle_twitter>")
-            return
-
-        twitter_handle, code, expiration_time = verification_codes[ctx.author.id]
-
-        if datetime.now() > expiration_time:
-            del verification_codes[ctx.author.id]
-            await ctx.send("Le code de vérification a expiré. Veuillez recommencer le processus de vérification.")
-            return
-
         try:
             response = requests.get(f"https://publish.twitter.com/oembed?url={tweet_url}")
             tweet_data = response.json()
-            
+
             if response.status_code == 200:
                 tweet_html = tweet_data['html']
                 print(f"HTML du tweet: {tweet_html}")
 
                 # Décoder les entités HTML
                 tweet_html = html.unescape(tweet_html)
-                
-                # Extraction du handle Twitter depuis le HTML
-                match = re.search(r'\(@([^)]+)\)', tweet_html)
-                if match:
-                    extracted_handle = match.group(1).lower()
-                    print(f"Handle extrait: {extracted_handle}")
-                    print(f"Handle attendu: {twitter_handle}")
-                    print(f"Code attendu: {code}")
-                    
-                    # Vérifiez si le handle Twitter et le code de vérification sont présents dans le HTML du tweet
-                    if extracted_handle == twitter_handle and f"#VerificationCode: {code}".lower() in tweet_html.lower():
-                        print("Handle et code vérifiés avec succès.")
 
-                        # Appeler check_account après vérification réussie
-                        result, keyword_counts = check_account(twitter_handle)
-                        if result:
+                # Extraire le texte du tweet pour vérifier le code de vérification
+                soup = BeautifulSoup(tweet_html, 'html.parser')
+                tweet_text = soup.get_text()
+                print(f"Texte du tweet: {tweet_text}")
+
+                # Vérifiez si le code de vérification est présent dans le texte du tweet
+                match = re.search(r'#VerificationCode:\s?([A-Z0-9]+)', tweet_text, re.IGNORECASE)
+                if match:
+                    code_in_tweet = match.group(1).upper()
+                    print(f"Code trouvé dans le tweet: {code_in_tweet}")
+
+                    if ctx.author.id in verification_codes:
+                        expected_code = verification_codes[ctx.author.id][1]
+                        print(f"Code attendu: {expected_code}")
+
+                        if code_in_tweet == expected_code:
+                            await ctx.send(f"Le code de vérification {code_in_tweet} a été trouvé dans le tweet et est correct.")
+                            
+                            # Appliquer le nouveau rôle et retirer l'ancien
                             role_verified = discord.utils.get(ctx.guild.roles, name='Membre')
                             role_non_verified = discord.utils.get(ctx.guild.roles, name='Non Vérifié')
                             if role_verified and role_non_verified:
                                 await ctx.author.add_roles(role_verified)
                                 await ctx.author.remove_roles(role_non_verified)
-                                update_sheet(ctx.author.id, twitter_handle, verified=True)
-                                await purge_user_messages(ctx.channel, ctx.author.id)
-                                await ctx.send(f"Utilisateur {ctx.author.mention} vérifié et rôle 'Membre' attribué.")
-                        else:
-                            role_refused = discord.utils.get(ctx.guild.roles, name='Refusé')
-                            if role_refused:
-                                await ctx.author.add_roles(role_refused)
-                                await ctx.send(f"Utilisateur {ctx.author.mention} a été refusé.")
 
-                        # Enregistrer les détails dans les logs
-                        print(f"Détails de la vérification pour {twitter_handle}:")
-                        for keyword, count in keyword_counts.items():
-                            print(f" - {keyword}: {count} occurrence(s)")
-                        
-                        del verification_codes[ctx.author.id]
-                        return
+                            # Mettre à jour la feuille Google
+                            update_sheet(ctx.author.id, verification_codes[ctx.author.id][0], verified=True)
+
+                            # Supprimer les messages de vérification de l'utilisateur et du bot
+                            await purge_user_messages(ctx.channel, ctx.author.id)
+
+                            # Suppression du code de vérification après utilisation
+                            del verification_codes[ctx.author.id]
+                        else:
+                            await ctx.send("Le code de vérification dans le tweet ne correspond pas au code attendu.")
                     else:
-                        print("Le handle ou le code ne correspondent pas.")
-                await ctx.send("Le tweet ne contient pas le code de vérification ou n'a pas été tweeté par le bon utilisateur. Veuillez réessayer.")
+                        await ctx.send("Aucun code de vérification en attente pour cet utilisateur.")
+                else:
+                    await ctx.send("Le tweet ne contient pas le code de vérification.")
             else:
                 await ctx.send(f"Erreur lors de l'accès au tweet: {response.status_code}")
         except Exception as e:
@@ -165,14 +140,6 @@ def register_commands(bot):
     async def test_account_command(ctx):
         user_handle = 'gaulerie'
         await ctx.send(f"Testing account for {user_handle}")
-        result, keyword_counts = check_account(user_handle)
-        if result:
-            await ctx.send(f"Account {user_handle} passed verification")
-        else:
-            await ctx.send(f"Account {user_handle} failed verification")
-        print("Detailed keyword occurrences:")
-        for keyword, count in keyword_counts.items():
-            print(f"{keyword}: {count}")
 
     async def purge_user_messages(channel, user_id):
         def check(m):
