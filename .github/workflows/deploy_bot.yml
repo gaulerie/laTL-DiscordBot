@@ -1,10 +1,9 @@
 name: Deploy Discord Bot
 
 on:
-  #push:
-  #  branches:
-  #    - main
   workflow_dispatch: # Permet de déclencher manuellement le workflow
+  schedule:
+    - cron: '0 */6 * * *' # Exécuter toutes les 6 heures
 
 jobs:
   build:
