@@ -4,16 +4,10 @@ import requests
 from datetime import datetime, timedelta
 import random
 import string
+import html
 import re
-
-# Initialisation des intents
-intents = discord.Intents.default()
-intents.messages = True
-intents.guilds = True
-intents.members = True
-
-# Initialisation du bot avec les intents
-bot = commands.Bot(command_prefix='!', intents=intents)
+import os
+from bs4 import BeautifulSoup
 
 verification_codes = {}
 
@@ -44,151 +38,132 @@ async def clean_verification_codes():
     for user_id in expired_codes:
         del verification_codes[user_id]
 
-@bot.command(name='help')
-async def help_command(ctx):
-    help_text = """
-    **Commandes disponibles :**
-    `!verify [@ Twitter]` - Démarre le processus de vérification.
-    `!check [lien du tweet]` - Vérifie le tweet avec le code de vérification.
-    `!clear [nombre de messages]` - Supprime le nombre spécifié de messages dans le canal.
-    """
-    await ctx.send(help_text)
+def register_commands(bot):
+    @bot.command(name='help')
+    async def help_command(ctx):
+        help_text = """
+        **Commandes disponibles :**
+        `!verify [@ Twitter]` - Démarre le processus de vérification.
+        `!check [lien du tweet]` - Vérifie le tweet avec le code de vérification.
+        `!clear [nombre de messages]` - Supprime le nombre spécifié de messages dans le canal.
+        """
+        await ctx.send(help_text)
 
-@bot.command(name='clear')
-@commands.has_permissions(manage_messages=True)
-async def clear(ctx, amount: int):
-    if str(ctx.channel) in ['shitpost', 'memes']:
-        await ctx.send("La commande !clear ne peut pas être utilisée dans ce canal.")
-        return
-    
-    if amount < 1:
-        await ctx.send("Le nombre de messages à supprimer doit être supérieur à 0.")
-        return
-    
-    def not_pinned(message):
-        return not message.pinned
+    @bot.command(name='clear')
+    @commands.has_permissions(manage_messages=True)
+    async def clear(ctx, amount: int):
+        if str(ctx.channel) in ['shitpost', 'memes']:
+            await ctx.send("La commande !clear ne peut pas être utilisée dans ce canal.")
+            return
+        
+        if amount < 1:
+            await ctx.send("Le nombre de messages à supprimer doit être supérieur à 0.")
+            return
+        
+        def not_pinned(message):
+            return not message.pinned
 
-    deleted = await ctx.channel.purge(limit=amount + 1, check=not_pinned)  # +1 pour inclure la commande elle-même
-    deleted_count = len(deleted)  # Nombre total de messages supprimés, y compris la commande elle-même
-    await ctx.send(f"{deleted_count - 1} messages ont été supprimés.", delete_after=5)  # -1 pour exclure la commande elle-même
+        deleted = await ctx.channel.purge(limit=amount + 1, check=not_pinned)  # +1 pour inclure la commande elle-même
+        deleted_count = len(deleted)  # Nombre total de messages supprimés, y compris la commande elle-même
+        await ctx.send(f"{deleted_count - 1} messages ont été supprimés.", delete_after=5)  # -1 pour exclure la commande elle-même
 
-@bot.command(name='verify')
-async def verify(ctx, twitter_handle: str = None):
-    if not twitter_handle:
-        await ctx.send("Veuillez écrire !verify [@ Twitter]")
-        return
+    @bot.command(name='verify')
+    async def verify(ctx, twitter_handle: str = None):
+        if not twitter_handle:
+            await ctx.send("Veuillez écrire !verify [@ Twitter]")
+            return
 
-    twitter_handle = twitter_handle.strip('@').lower()
-    code = generate_verification_code()
-    expiration_time = datetime.now() + timedelta(minutes=5)
-    verification_codes[ctx.author.id] = (twitter_handle, code, expiration_time)
-    await ctx.send(f"Veuillez tweeter le code suivant depuis votre compte Twitter @{twitter_handle} avec le hashtag #VerificationCode: {code}. Ce code expirera dans 5 minutes.")
+        twitter_handle = twitter_handle.strip('@').lower()
+        code = generate_verification_code()
+        expiration_time = datetime.now() + timedelta(minutes=5)
+        verification_codes[ctx.author.id] = (twitter_handle, code, expiration_time)
+        await ctx.send(f"Veuillez tweeter le code suivant depuis votre compte Twitter @{twitter_handle} avec le hashtag #VerificationCode: {code}. Ce code expirera dans 5 minutes.")
 
-@bot.command(name='check')
-async def check(ctx, tweet_url: str = None):
-    if not tweet_url:
-        await ctx.send("Veuillez écrire !check [lien du tweet]")
-        return
+    @bot.command(name='check')
+    async def check(ctx, tweet_url: str = None):
+        if not tweet_url:
+            await ctx.send("Veuillez écrire !check [lien du tweet]")
+            return
 
-    try:
-        response = requests.get(f"https://publish.twitter.com/oembed?url={tweet_url}")
-        tweet_data = response.json()
+        try:
+            response = requests.get(f"https://publish.twitter.com/oembed?url={tweet_url}")
+            tweet_data = response.json()
 
-        if response.status_code == 200:
-            tweet_html = tweet_data['html']
-            tweet_text = re.sub('<.*?>', '', tweet_html)
+            if response.status_code == 200:
+                tweet_html = tweet_data['html']
+                print(f"HTML du tweet: {tweet_html}")
 
-            match = re.search(r'#VerificationCode:\s?([A-Z0-9]+)', tweet_text, re.IGNORECASE)
-            if match:
-                code_in_tweet = match.group(1).upper()
+                # Décoder les entités HTML
+                tweet_html = html.unescape(tweet_html)
 
-                if ctx.author.id in verification_codes:
-                    expected_code = verification_codes[ctx.author.id][1]
+                # Extraire le texte du tweet pour vérifier le code de vérification
+                soup = BeautifulSoup(tweet_html, 'html.parser')
+                tweet_text = soup.get_text()
+                print(f"Texte du tweet: {tweet_text}")
 
-                    if code_in_tweet == expected_code:
-                        role_verified = discord.utils.get(ctx.guild.roles, name='Congolais 🔪')
-                        role_non_verified = discord.utils.get(ctx.guild.roles, name='Non Vérifié')
-                        if role_verified and role_non_verified:
-                            await ctx.author.add_roles(role_verified)
-                            await ctx.author.remove_roles(role_non_verified)
+                # Vérifiez si le code de vérification est présent dans le texte du tweet
+                match = re.search(r'#VerificationCode:\s?([A-Z0-9]+)', tweet_text, re.IGNORECASE)
+                if match:
+                    code_in_tweet = match.group(1).upper()
+                    print(f"Code trouvé dans le tweet: {code_in_tweet}")
 
-                        update_sheet(ctx.author.id, verification_codes[ctx.author.id][0], verified=True)
-                        await purge_user_messages(ctx.channel, ctx.author.id)
+                    if ctx.author.id in verification_codes:
+                        expected_code = verification_codes[ctx.author.id][1]
+                        print(f"Code attendu: {expected_code}")
 
-                        twitter_handle = verification_codes[ctx.author.id][0]
-                        new_nickname = f"@{twitter_handle}"
-                        
-                        try:
-                            await ctx.author.edit(nick=new_nickname)
-                        except discord.Forbidden:
-                            await ctx.send("Je n'ai pas la permission de changer votre surnom. Veuillez vérifier les permissions du bot et la hiérarchie des rôles.")
+                        if code_in_tweet == expected_code:
+                            # await ctx.send(f"Le code de vérification {code_in_tweet} a été trouvé dans le tweet et est correct.")
+                            
+                            # Appliquer le nouveau rôle et retirer l'ancien
+                            role_verified = discord.utils.get(ctx.guild.roles, name='Congolais 🔪')
+                            role_non_verified = discord.utils.get(ctx.guild.roles, name='Non Vérifié')
+                            if role_verified and role_non_verified:
+                                await ctx.author.add_roles(role_verified)
+                                await ctx.author.remove_roles(role_non_verified)
 
-                        del verification_codes[ctx.author.id]
+                            # Mettre à jour la feuille Google
+                            update_sheet(ctx.author.id, verification_codes[ctx.author.id][0], verified=True)
+
+                            # Supprimer les messages de vérification de l'utilisateur et du bot
+                            await purge_user_messages(ctx.channel, ctx.author.id)
+
+                            # Renommer l'utilisateur avec son handle Twitter
+                            twitter_handle = verification_codes[ctx.author.id][0]
+                            new_nickname = f"@{twitter_handle}"
+                            
+                            try:
+                                await ctx.author.edit(nick=new_nickname)
+                            except discord.Forbidden:
+                                await ctx.send("Je n'ai pas la permission de changer votre surnom. Veuillez vérifier les permissions du bot et la hiérarchie des rôles.")
+
+                            # Suppression du code de vérification après utilisation
+                            del verification_codes[ctx.author.id]
+                        else:
+                            await ctx.send("Le code de vérification dans le tweet ne correspond pas au code attendu.")
                     else:
-                        await ctx.send("Le code de vérification dans le tweet ne correspond pas au code attendu.")
+                        await ctx.send("Aucun code de vérification en attente pour cet utilisateur.")
                 else:
-                    await ctx.send("Aucun code de vérification en attente pour cet utilisateur.")
+                    await ctx.send("Le tweet ne contient pas le code de vérification.")
             else:
-                await ctx.send("Le tweet ne contient pas le code de vérification.")
-        else:
-            await ctx.send(f"Erreur lors de l'accès au tweet: {response.status_code}")
-    except Exception as e:
-        await ctx.send(f"Erreur lors de l'accès au tweet: {str(e)}")
+                await ctx.send(f"Erreur lors de l'accès au tweet: {response.status_code}")
+        except Exception as e:
+            await ctx.send(f"Erreur lors de l'accès au tweet: {str(e)}")
 
-@bot.command(name='testaccount')
-async def test_account_command(ctx):
-    user_handle = 'gaulerie'
-    await ctx.send(f"Testing account for {user_handle}")
+    @bot.command(name='testaccount')
+    async def test_account_command(ctx):
+        user_handle = 'gaulerie'
+        await ctx.send(f"Testing account for {user_handle}")
 
-async def purge_user_messages(channel, user_id):
-    def check(m):
-        return (m.author.id == user_id or (m.author == bot.user and "#VerificationCode:" in m.content)) and not m.pinned
+    async def purge_user_messages(channel, user_id):
+        def check(m):
+            return (m.author.id == user_id or (m.author == bot.user and "#VerificationCode:" in m.content)) and not m.pinned
 
-    deleted = await channel.purge(limit=100, check=check)
-    print(f"Deleted {len(deleted)} messages")
+        deleted = await channel.purge(limit=100, check=check)
+        print(f"Deleted {len(deleted)} messages")
 
-@bot.event
-async def on_member_join(member):
-    print(f'Member joined: {member}')
-    update_sheet(member.id, '', verified=False)
+    @bot.event
+    async def on_member_join(member):
+        print(f'Member joined: {member}')
+        update_sheet(member.id, '', verified=False)
 
-@bot.event
-async def on_message(message):
-    await bot.process_commands(message)
-    
-    if message.channel.name == 'logs':
-        level_match = re.search(r'@(\S+) is level \*\*(\d+)\*\*! @(\S+)', message.content)
-        if level_match:
-            user_mention = level_match.group(1)
-            role_mention = level_match.group(3)
-
-            custom_messages = {
-                "Hyperboréen ⚡⚡": "Félicitations pour être devenu Hyperboréen !",
-                "Algérien 🪳": "Bien joué tu es desormais un bougne",
-                "Allemand 🦅": "Tu es maintenant un Allemand, bravo !",
-                "Américain 🗽": "Tu es maintenant un Américain !",
-                "Britannique 🚆": "Félicitations pour devenir un Britannique !",
-                "Camerounais 🪨": "Bien joué tu es desormais un noir",
-                "Français 🍷": "Bienvenue parmi les Français !",
-                "Italien 🍝": "Bienvenue parmi les Italiens !",
-                "Japonais 🎌": "Félicitations, tu es maintenant Japonais !",
-                "Norvégiens ❄️": "Bienvenue au club des Norvégiens !",
-                "Ukrainien 🔱": "Tu es maintenant un Ukrainien, bravo !",
-                "Russe ⚒️": "Bienvenue parmi les Russes !",
-                "Rhodésien 💰": "Tu es maintenant un Rhodésien !",
-                "Soudanais 🐒": "Bienvenue parmi les Soudanais !"
-            }
-
-            if role_mention in custom_messages:
-                channel_discussion = discord.utils.get(message.guild.channels, name='discussion')
-                if channel_discussion:
-                    try:
-                        await channel_discussion.send(f"Bravo {user_mention} {custom_messages[role_mention]}")
-                    except Exception as e:
-                        print(f"Erreur lors de l'envoi du message dans discussion : {str(e)}")
-
-# Démarrer la tâche de nettoyage des codes de vérification
-clean_verification_codes.start()
-
-# Lancer le bot avec le token
-bot.run('VOTRE_TOKEN')
+    return clean_verification_codes  # Retourner la tâche pour qu'elle soit démarrée dans bot.py
