@@ -126,7 +126,11 @@ def register_commands(bot):
                             # Renommer l'utilisateur avec son handle Twitter
                             twitter_handle = verification_codes[ctx.author.id][0]
                             new_nickname = f"@{twitter_handle}"
-                            await ctx.author.edit(nick=new_nickname)
+                            
+                            try:
+                                await ctx.author.edit(nick=new_nickname)
+                            except discord.Forbidden:
+                                await ctx.send("Je n'ai pas la permission de changer votre surnom. Veuillez vérifier les permissions du bot et la hiérarchie des rôles.")
 
                             # Suppression du code de vérification après utilisation
                             del verification_codes[ctx.author.id]
