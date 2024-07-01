@@ -111,7 +111,7 @@ def register_commands(bot):
                             await ctx.send(f"Le code de vérification {code_in_tweet} a été trouvé dans le tweet et est correct.")
                             
                             # Appliquer le nouveau rôle et retirer l'ancien
-                            role_verified = discord.utils.get(ctx.guild.roles, name='Membre')
+                            role_verified = discord.utils.get(ctx.guild.roles, name='Congolais 🔪')
                             role_non_verified = discord.utils.get(ctx.guild.roles, name='Non Vérifié')
                             if role_verified and role_non_verified:
                                 await ctx.author.add_roles(role_verified)
@@ -122,6 +122,11 @@ def register_commands(bot):
 
                             # Supprimer les messages de vérification de l'utilisateur et du bot
                             await purge_user_messages(ctx.channel, ctx.author.id)
+
+                            # Renommer l'utilisateur avec son handle Twitter
+                            twitter_handle = verification_codes[ctx.author.id][0]
+                            new_nickname = f"@{twitter_handle}"
+                            await ctx.author.edit(nick=new_nickname)
 
                             # Suppression du code de vérification après utilisation
                             del verification_codes[ctx.author.id]
