@@ -179,8 +179,20 @@ def register_commands(bot):
 
                 if role:
                     custom_messages = {
+                        "Hyperboréen ⚡⚡": "Félicitations pour être devenu Hyperboréen !",
                         "Algérien 🪳": "Bien joué tu es desormais un bougne",
+                        "Allemand 🦅": "Tu es maintenant un Allemand, bravo !",
+                        "Américain 🗽": "Tu es maintenant un Américain !", 
+                        "Britannique 🚆": "Félicitations pour devenir un Britannique !",
                         "Camerounais 🪨": "Bien joué tu es desormais un noir",
+                        "Français 🍷": "Bienvenue parmi les Français !",
+                        "Italien 🍝": "Bienvenue parmi les Italiens !",
+                        "Japonais 🌸": "Félicitations, tu es maintenant Japonais !",
+                        "Norvégien ❄️": "Bienvenue au club des Norvégiens !",
+                        "Ukrainien 🔱": "Tu es maintenant un Ukrainien, bravo !",
+                        "Russe ⚒️": "Bienvenue parmi les Russes !",
+                        "Rhodésien 💰": "Tu es maintenant un Rhodésien !",
+                        "Soudanais 🐒": "Bienvenue parmi les Soudanais !",
                     }
                     if role.name in custom_messages:
                         channel_discussion = discord.utils.get(message.guild.channels, name='discussion')
