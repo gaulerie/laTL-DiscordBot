@@ -6,8 +6,14 @@ import random
 import string
 import re
 
-# Initialisation du bot
-bot = commands.Bot(command_prefix='!')
+# Initialisation des intents
+intents = discord.Intents.default()
+intents.messages = True
+intents.guilds = True
+intents.members = True
+
+# Initialisation du bot avec les intents
+bot = commands.Bot(command_prefix='!', intents=intents)
 
 verification_codes = {}
 
