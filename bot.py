@@ -18,6 +18,7 @@ register_commands(bot)
 @bot.event
 async def on_ready():
     print(f'We have logged in as {bot.user}')
+    apply_rainbow_roles.start()  # Démarrer la tâche de changement de couleur
     clean_verification_codes.start()
 
 @tasks.loop(seconds=5)  # Change de couleur toutes les 5000ms
@@ -29,6 +30,8 @@ async def apply_rainbow_roles():
             random_color = discord.Color(random.randint(0, 0xFFFFFF))
             await role.edit(color=random_color)
             print(f'Changed role color to {random_color}')
+        else:
+            print("Role 'Admin' not found")
 
 @bot.event
 async def on_member_join(member):
