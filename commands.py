@@ -171,32 +171,32 @@ def register_commands(bot):
         await bot.process_commands(message)
         
         if message.channel.name == 'logs':
-            level_match = re.search(r'is level \*\*(\d+)\*\*! earned: <@&(\d+)>', message.content)
+            level_match = re.search(r'@(\S+) is level \*\*(\d+)\*\*! @(\S+)', message.content)
             if level_match:
-                user_level = level_match.group(1)
-                role_id = int(level_match.group(2))
-                role = discord.utils.get(message.guild.roles, id=role_id)
+                user_mention = level_match.group(1)
+                user_level = level_match.group(2)
+                role_mention = level_match.group(3)
 
-                if role:
-                    custom_messages = {
-                        "Hyperboréen ⚡⚡": "Félicitations pour être devenu Hyperboréen !",
-                        "Algérien 🪳": "Bien joué tu es desormais un bougne",
-                        "Allemand 🦅": "Tu es maintenant un Allemand, bravo !",
-                        "Américain 🗽": "Tu es maintenant un Américain !", 
-                        "Britannique 🚆": "Félicitations pour devenir un Britannique !",
-                        "Camerounais 🪨": "Bien joué tu es desormais un noir",
-                        "Français 🍷": "Bienvenue parmi les Français !",
-                        "Italien 🍝": "Bienvenue parmi les Italiens !",
-                        "Japonais 🌸": "Félicitations, tu es maintenant Japonais !",
-                        "Norvégien ❄️": "Bienvenue au club des Norvégiens !",
-                        "Ukrainien 🔱": "Tu es maintenant un Ukrainien, bravo !",
-                        "Russe ⚒️": "Bienvenue parmi les Russes !",
-                        "Rhodésien 💰": "Tu es maintenant un Rhodésien !",
-                        "Soudanais 🐒": "Bienvenue parmi les Soudanais !",
-                    }
-                    if role.name in custom_messages:
-                        channel_discussion = discord.utils.get(message.guild.channels, name='discussion')
-                        if channel_discussion:
-                            await channel_discussion.send(custom_messages[role.name])
+                custom_messages = {
+                    "Hyperboréen ⚡⚡": "Félicitations pour être devenu Hyperboréen !",
+                    "Algérien 🪳": "Bien joué tu es desormais un bougne",
+                    "Allemand 🦅": "Tu es maintenant un Allemand, bravo !",
+                    "Américain 🗽": "Tu es maintenant un Américain !",
+                    "Britannique 🌐": "Félicitations pour devenir un Britannique !",
+                    "Camerounais 🪨": "Bien joué tu es desormais un noir",
+                    "Français 🍷": "Bienvenue parmi les Français !",
+                    "Italien 🍝": "Bienvenue parmi les Italiens !",
+                    "Japonais 🌸": "Félicitations, tu es maintenant Japonais !",
+                    "Norvégiens ❄️": "Bienvenue au club des Norvégiens !",
+                    "Ukrainien 🔱": "Tu es maintenant un Ukrainien, bravo !",
+                    "Russe ⚒️": "Bienvenue parmi les Russes !",
+                    "Rhodésien 💰": "Tu es maintenant un Rhodésien !",
+                    "Soudanais 🐘": "Bienvenue parmi les Soudanais !"
+                }
+
+                if role_mention in custom_messages:
+                    channel_discussion = discord.utils.get(message.guild.channels, name='discussion')
+                    if channel_discussion:
+                        await channel_discussion.send(f"{user_mention} {custom_messages[role_mention]}")
 
     return clean_verification_codes  # Retourner la tâche pour qu'elle soit démarrée dans bot.py
