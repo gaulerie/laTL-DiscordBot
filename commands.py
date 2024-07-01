@@ -52,6 +52,10 @@ def register_commands(bot):
     @bot.command(name='clear')
     @commands.has_permissions(manage_messages=True)
     async def clear(ctx, amount: int):
+        if str(ctx.channel) in ['shitpost', 'memes']:
+            await ctx.send("La commande !clear ne peut pas être utilisée dans ce canal.")
+            return
+        
         if amount < 1:
             await ctx.send("Le nombre de messages à supprimer doit être supérieur à 0.")
             return
