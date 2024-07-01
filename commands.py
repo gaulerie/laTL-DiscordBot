@@ -108,7 +108,7 @@ def register_commands(bot):
                         print(f"Code attendu: {expected_code}")
 
                         if code_in_tweet == expected_code:
-                            await ctx.send(f"Le code de vérification {code_in_tweet} a été trouvé dans le tweet et est correct.")
+                            # await ctx.send(f"Le code de vérification {code_in_tweet} a été trouvé dans le tweet et est correct.")
                             
                             # Appliquer le nouveau rôle et retirer l'ancien
                             role_verified = discord.utils.get(ctx.guild.roles, name='Congolais 🔪')
