@@ -166,4 +166,25 @@ def register_commands(bot):
         print(f'Member joined: {member}')
         update_sheet(member.id, '', verified=False)
 
+    @bot.event
+    async def on_message(message):
+        await bot.process_commands(message)
+        
+        if message.channel.name == 'admin':
+            level_match = re.search(r'is level \*\*(\d+)\*\*! earned: <@&(\d+)>', message.content)
+            if level_match:
+                user_level = level_match.group(1)
+                role_id = int(level_match.group(2))
+                role = discord.utils.get(message.guild.roles, id=role_id)
+
+                if role:
+                    custom_messages = {
+                        "Algérien 🪳": "Bien joué tu es desormais un bougne",
+                        "Camerounais 🪨": "Bien joué tu es desormais un noir",
+                    }
+                    if role.name in custom_messages:
+                        channel_discussion = discord.utils.get(message.guild.channels, name='discussion')
+                        if channel_discussion:
+                            await channel_discussion.send(custom_messages[role.name])
+
     return clean_verification_codes  # Retourner la tâche pour qu'elle soit démarrée dans bot.py
