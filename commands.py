@@ -170,7 +170,7 @@ def register_commands(bot):
     async def on_message(message):
         await bot.process_commands(message)
         
-        if message.channel.name == 'admin':
+        if message.channel.name == 'logs':
             level_match = re.search(r'is level \*\*(\d+)\*\*! earned: <@&(\d+)>', message.content)
             if level_match:
                 user_level = level_match.group(1)
