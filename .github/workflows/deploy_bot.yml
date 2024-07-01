@@ -3,7 +3,7 @@ name: Deploy Discord Bot
 on:
   workflow_dispatch: # Permet de déclencher manuellement le workflow
   schedule:
-    - cron: '0 * * * *' # Exécuter toutes les heures
+    - cron: '0 */6 * * *' # Exécuter toutes les 6 heures
 
 jobs:
   build:
@@ -11,6 +11,15 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+      
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+
+      - name: Install pm2 globally
+        run: npm install pm2@latest -g
+
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
@@ -22,21 +31,15 @@ jobs:
           pip install -r requirements.txt
 
       - name: Stop previous bot instance if running
-        run: |
-          if [ -f bot.pid ]; then
-            PID=$(cat bot.pid)
-            if ps -p $PID > /dev/null; then
-              echo "Stopping previous bot instance with PID $PID"
-              kill $PID
-            fi
-            rm -f bot.pid
-          fi
+        run: pm2 delete bot || true # Cette commande arrête et supprime toute instance précédente du bot
 
-      - name: Run bot
+      - name: Run bot with pm2
         env:
           DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
-        run: |
-          nohup python bot.py & echo $! > bot.pid
+        run: pm2 start bot.py --name bot --interpreter python3 # Démarre une nouvelle instance du bot avec pm2
+
+      - name: Save pm2 process list
+        run: pm2 save # Sauvegarde la liste des processus pm2 pour la persistance
 
       - name: Schedule next run
         if: ${{ success() || failure() }}
