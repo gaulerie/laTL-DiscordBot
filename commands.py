@@ -174,7 +174,6 @@ def register_commands(bot):
             level_match = re.search(r'@(\S+) is level \*\*(\d+)\*\*! @(\S+)', message.content)
             if level_match:
                 user_mention = level_match.group(1)
-                user_level = level_match.group(2)
                 role_mention = level_match.group(3)
 
                 custom_messages = {
@@ -186,7 +185,7 @@ def register_commands(bot):
                     "Camerounais 🪨": "Bien joué tu es desormais un noir",
                     "Français 🍷": "Bienvenue parmi les Français !",
                     "Italien 🍝": "Bienvenue parmi les Italiens !",
-                    "Japonais 🌸": "Félicitations, tu es maintenant Japonais !",
+                    "Japonais 🎌": "Félicitations, tu es maintenant Japonais !",
                     "Norvégiens ❄️": "Bienvenue au club des Norvégiens !",
                     "Ukrainien 🔱": "Tu es maintenant un Ukrainien, bravo !",
                     "Russe ⚒️": "Bienvenue parmi les Russes !",
@@ -197,6 +196,6 @@ def register_commands(bot):
                 if role_mention in custom_messages:
                     channel_discussion = discord.utils.get(message.guild.channels, name='discussion')
                     if channel_discussion:
-                        await channel_discussion.send(f"{user_mention} {custom_messages[role_mention]}")
+                        await channel_discussion.send(f"Bravo {user_mention} {custom_messages[role_mention]}")
 
     return clean_verification_codes  # Retourner la tâche pour qu'elle soit démarrée dans bot.py
