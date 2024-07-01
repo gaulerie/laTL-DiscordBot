@@ -3,7 +3,7 @@ name: Deploy Discord Bot
 on:
   workflow_dispatch: # Permet de déclencher manuellement le workflow
   schedule:
-    - cron: '0 */6 * * *' # Exécuter toutes les 6 heures
+    - cron: '0 * * * *' # Exécuter toutes les heures
 
 jobs:
   build:
@@ -21,11 +21,22 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      - name: Stop previous bot instance if running
+        run: |
+          if [ -f bot.pid ]; then
+            PID=$(cat bot.pid)
+            if ps -p $PID > /dev/null; then
+              echo "Stopping previous bot instance with PID $PID"
+              kill $PID
+            fi
+            rm -f bot.pid
+          fi
+
       - name: Run bot
         env:
           DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
         run: |
-          python bot.py
+          nohup python bot.py & echo $! > bot.pid
 
       - name: Schedule next run
         if: ${{ success() || failure() }}
