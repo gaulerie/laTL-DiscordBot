@@ -14,14 +14,15 @@ verification_codes = {}
 def generate_verification_code():
     return ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
 
-def update_sheet(discord_id, twitter_handle, verified=False, left_date=''):
+def update_sheet(discord_id, twitter_handle, verified=False, left_date='', roles=''):
     join_date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     data = {
         'discord_id': discord_id,
         'twitter_handle': twitter_handle,
         'join_date': join_date,
         'leave_date': left_date,
-        'verified': verified
+        'verified': verified,
+        'roles': roles
     }
     SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwi3Gh5TuK2IZV2R8imZa-B2m8gZpzByRfKHvMWxwHXffkNuIJ99OyISnYWfazhK7JHng/exec'
     response = requests.post(SCRIPT_URL, json=data)
@@ -37,6 +38,9 @@ async def clean_verification_codes():
     expired_codes = [user_id for user_id, (_, _, expiration_time) in verification_codes.items() if current_time > expiration_time]
     for user_id in expired_codes:
         del verification_codes[user_id]
+
+def get_user_roles(member):
+    return '; '.join([role.name for role in member.roles if role.name != "@everyone"])
 
 def register_commands(bot):
     @bot.command(name='help')
@@ -122,7 +126,8 @@ def register_commands(bot):
                                 await ctx.author.remove_roles(role_non_verified)
 
                             # Mettre à jour la feuille Google
-                            update_sheet(ctx.author.id, verification_codes[ctx.author.id][0], verified=True)
+                            roles = get_user_roles(ctx.author)
+                            update_sheet(ctx.author.id, verification_codes[ctx.author.id][0], verified=True, roles=roles)
 
                             # Supprimer les messages de vérification de l'utilisateur et du bot
                             await purge_user_messages(ctx.channel, ctx.author.id)
@@ -164,6 +169,20 @@ def register_commands(bot):
     @bot.event
     async def on_member_join(member):
         print(f'Member joined: {member}')
-        update_sheet(member.id, '', verified=False)
+        update_sheet(member.id, '', verified=False, roles=get_user_roles(member))
+
+    @bot.event
+    async def on_member_update(before, after):
+        if before.roles != after.roles:
+            roles = get_user_roles(after)
+            update_sheet(after.id, '', roles=roles)
 
     return clean_verification_codes  # Retourner la tâche pour qu'elle soit démarrée dans bot.py
+
+# Here you would set up the bot and start the loop
+bot = commands.Bot(command_prefix='!')
+
+clean_verification_codes_task = register_commands(bot)
+clean_verification_codes_task.start()
+
+bot.run('YOUR_BOT_TOKEN')
